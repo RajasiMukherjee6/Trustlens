@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrustLens – Phishing & Web Trust Analyzer</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#12151f;--mut:#5b6377;--bd:#e2e5ee;--ac:#4f46e5;--ok:#16a34a;--wn:#d97706;--bad:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1117;--card:#171b25;--tx:#e8eaf2;--mut:#98a0b5;--bd:#2a3040;--ac:#818cf8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1117;--card:#171b25;--tx:#e8eaf2;--mut:#98a0b5;--bd:#2a3040;--ac:#818cf8;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0}p.s{color:var(--mut);margin:0 0 14px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+nav a{flex:0 0 auto;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;min-height:44px;display:inline-flex;align-items:center;border-radius:999px;font:inherit;cursor:pointer;text-decoration:none;touch-action:manipulation}
+nav a.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-size:16px;margin:4px 0 8px}
+textarea{min-height:130px;font-family:ui-monospace,monospace;font-size:13px}
+label{font-size:13px;color:var(--mut)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.btn{background:var(--ac);color:#fff;border:0;padding:10px 16px;min-height:44px;border-radius:10px;font:inherit;cursor:pointer;margin:2px 6px 2px 0;display:inline-block;text-decoration:none;touch-action:manipulation}
+.btn.l{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+a.lk{color:var(--ac)}.ext a{display:inline-block;margin:6px 16px 2px 0}
+.hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px}.hg .c{margin:0}
+.hm{display:block;color:inherit;text-decoration:none}.hm:hover,.hm:focus-visible{border-color:var(--ac)}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%}
+.v{font-size:20px;font-weight:700}
+.f{display:flex;gap:8px;padding:6px 0;border-top:1px solid var(--bd)}.f:first-child{border:0}
+.d{flex:0 0 10px;height:10px;border-radius:50%;margin-top:7px}
+.t{font-size:12px;color:var(--mut)}
+section{display:none}section.on{display:block}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bd);margin-left:6px}
+</style></head><body><main>
+<h1>🛡️ TrustLens</h1>
+<p class="s">Phishing detection, certificate validation, web security checks and community threat intel in one place.</p>
+<nav id="nav"><a href="#home" data-t="o" class="on">Home</a><a href="#url-scan" data-t="u">URL scan</a><a href="#certificate" data-t="c">Certificate</a><a href="#keys" data-t="k">Key analysis</a><a href="#headers" data-t="h">Headers</a><a href="#feed" data-t="i">Threat feed</a></nav>
+
+<section id="o" class="on"><div class="c"><div class="v">One platform, five checks</div><p class="s" style="margin:6px 0 0">Paste a link, validate a certificate, analyse keys, assess headers and share threats, all in one place. Analysis runs in your browser.</p></div>
+<div class="hg">
+<a class="c hm" href="#url-scan"><b>🔗 URL scan</b><div class="t">Detect phishing, typosquatting, homographs and malicious redirects.</div></a>
+<a class="c hm" href="#certificate"><b>📄 Certificate</b><div class="t">Check expiry, SAN match, weak algorithms, CT logging and CA watchlist.</div></a>
+<a class="c hm" href="#keys"><b>🔑 Key analysis</b><div class="t">Parse PEM keys; find small factors, close primes, ROCA and shared primes.</div></a>
+<a class="c hm" href="#headers"><b>🛡️ Headers</b><div class="t">Assess HSTS, CSP, cookie flags and outdated software.</div></a>
+<a class="c hm" href="#feed"><b>📣 Threat feed</b><div class="t">Report malicious domains and cross-check scans against community reports.</div></a>
+</div></section>
+<section id="u"><div class="c">
+<label>Paste a suspicious link</label>
+<input id="url" placeholder="http://paypa1-secure-login.xyz/verify" autocapitalize="off" autocorrect="off">
+<button class="btn" onclick="scanUrl()">Analyze</button><button class="btn l" onclick="pasteClip()">Paste</button>
+<button class="btn l" onclick="demo('http://sbi-kyc-update.top/login?url=http://x.co')">Try phish</button>
+<button class="btn l" onclick="demo('https://www.google.com')">Try safe</button>
+</div><div id="ur"></div><div class="c" id="uh" style="display:none"></div></section>
+
+<section id="c"><div class="c">
+<div class="g"><div><label>Hostname</label><input id="ch" value="bank.example.in"></div>
+<div><label>Issuer CA</label><input id="ci" value="eMudhra Sub CA"></div>
+<div><label>Valid from</label><input type="date" id="cf"></div>
+<div><label>Valid to</label><input type="date" id="ct"></div>
+<div><label>Signature</label><select id="cs"><option>SHA-256</option><option>SHA-384</option><option>SHA-1</option><option>MD5</option></select></div>
+<div><label>Key</label><select id="ck"><option>RSA 2048</option><option>RSA 4096</option><option>RSA 1024</option><option>ECDSA P-256</option></select></div></div>
+<label>Subject Alt Names (comma separated)</label><input id="ca" value="bank.example.in, www.bank.example.in">
+<label><input type="checkbox" id="cx" style="width:auto"> Self-signed</label><br>
+<label><input type="checkbox" id="cl" checked style="width:auto"> Certificate Transparency SCT present</label><br>
+<label>CA watchlist (comma separated)</label><input id="cw" value="eMudhra">
+<button class="btn" onclick="scanCert()">Validate</button>
+<button class="btn l" onclick="certDemo(1)">Weak sample</button>
+<button class="btn l" onclick="certDemo(0)">Healthy sample</button>
+<p class="t">Prototype takes certificate fields as input. The full build pulls them from the live TLS handshake and CT logs server-side.</p>
+</div><div id="cr"></div></section>
+
+<section id="k"><div class="c">
+<label>Paste certificate(s) or public key(s) in PEM, or lines like n=&lt;hex modulus&gt;</label>
+<textarea id="kt" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+<button class="btn" onclick="scanKeys()">Analyse keys</button>
+<button class="btn l" onclick="kDemo('shared')">Shared prime</button>
+<button class="btn l" onclick="kDemo('close')">Close primes</button>
+<button class="btn l" onclick="kDemo('ok')">Healthy 2048</button>
+<p class="t">Get a server certificate with: openssl s_client -connect host:443 &lt;/dev/null | openssl x509. Everything is analysed in your browser; nothing is uploaded. Paste several keys to test for shared primes across them.</p>
+</div><div id="kr"></div></section>
+<section id="h"><div class="c">
+<label>Paste HTTP response headers</label>
+<textarea id="hh">HTTP/1.1 200 OK
+Server: Apache/2.2.15 (CentOS)
+X-Powered-By: PHP/5.3.3
+Set-Cookie: sid=abc123; Path=/
+Strict-Transport-Security: max-age=300</textarea>
+<button class="btn" onclick="scanHdr()">Assess</button>
+<p class="t">Prototype analyses pasted headers. The full build fetches them from the target via the backend.</p>
+</div><div id="hr"></div></section>
+
+<section id="i"><div class="c">
+<label>Report a malicious URL</label>
+<input id="ru" placeholder="evil-bank-login.top">
+<select id="rc"><option>Phishing</option><option>Fake recruitment</option><option>Payment fraud</option><option>Malware redirect</option></select>
+<button class="btn" onclick="report()">Submit report</button>
+<p class="t">Stored in this browser for the demo. Production: shared database with votes and moderation. Scans check against this feed.</p>
+</div><div class="c" id="fd"></div></section>
+<div class="c ext"><b>Verify with trusted external tools</b><br><a class="lk" target="_blank" rel="noopener noreferrer" href="https://crt.sh/">crt.sh (CT logs)</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://www.ssllabs.com/ssltest/">SSL Labs</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://securityheaders.com/">Security Headers</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://urlhaus.abuse.ch/">URLhaus</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://transparencyreport.google.com/safe-browsing/search">Google Safe Browsing</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://cybercrime.gov.in/">Report cybercrime (India)</a></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const RT={'home':'o','url-scan':'u','certificate':'c','keys':'k','headers':'h','feed':'i'};
+function go(){const id=RT[location.hash.slice(1)]||'o';document.querySelectorAll('#nav a,section').forEach(e=>e.classList.remove('on'));const a=document.querySelector('#nav a[data-t="'+id+'"]');if(a){a.classList.add('on');if(a.scrollIntoView)a.scrollIntoView({inline:'center',block:'nearest'})}$('#'+id).classList.add('on')}
+const COL={ok:'var(--ok)',wn:'var(--wn)',bad:'var(--bad)'};
+function show(el,score,verdict,items,lowGood){
+ const k=score<25?'ok':score<55?'wn':'bad';
+ el.innerHTML='<div class="c"><div class="v" style="color:'+COL[k]+'">'+verdict+' · '+score+'/100</div><div class="bar"><i style="width:'+score+'%;background:'+COL[k]+'"></i></div>'+
+ items.map(i=>'<div class="f"><span class="d" style="background:'+COL[i[0]]+'"></span><div>'+i[1]+'</div></div>').join('')+'</div>';
+}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function lev(a,b){const m=[];for(let i=0;i<=a.length;i++){m[i]=[i];}for(let j=0;j<=b.length;j++)m[0][j]=j;
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return m[a.length][b.length]}
+const BR={paypal:'paypal.com',google:'google.com',microsoft:'microsoft.com',amazon:'amazon.in',apple:'apple.com',facebook:'facebook.com',netflix:'netflix.com',sbi:'sbi.co.in',hdfcbank:'hdfcbank.com',icicibank:'icicibank.com',irctc:'irctc.co.in',linkedin:'linkedin.com',naukri:'naukri.com',instagram:'instagram.com',whatsapp:'whatsapp.com'};
+const BAD_TLD=['zip','xyz','top','tk','click','country','gq','ml','cf','work','rest','support','mov','icu'];
+const KW=['login','verify','secure','update','account','payment','wallet','otp','kyc','bonus','prize','recruit','offer','refund','suspend'];
+const SHORT=['bit.ly','tinyurl.com','t.co','goo.gl','is.gd','cutt.ly'];
+function regDom(h){const p=h.split('.');if(p.length<3)return h;const s=p[p.length-2];return(p[p.length-1].length==2&&['co','com','gov','ac','org','net','edu'].includes(s))?p.slice(-3).join('.'):p.slice(-2).join('.')}
+const leet=s=>s.replace(/0/g,'o').replace(/1/g,'l').replace(/3/g,'e').replace(/5/g,'s').replace(/rn/g,'m').replace(/vv/g,'w');
+const ent=s=>{const f={};for(const c of s)f[c]=(f[c]||0)+1;return -Object.values(f).reduce((a,n)=>a+n/s.length*Math.log2(n/s.length),0)};
+const feed=()=>{try{return JSON.parse(localStorage.getItem('tl_feed'))||SEED}catch(e){return SEED}};
+const SEED=[{d:'sbi-kyc-update.top',c:'Phishing',n:14},{d:'jobs-amazon-hiring.click',c:'Fake recruitment',n:9},{d:'upi-refund-center.xyz',c:'Payment fraud',n:21}];
+function demo(u){$('#url').value=u;scanUrl()}
+function scanUrl(){
+ let raw=$('#url').value.replace(/[\u200b-\u200d\ufeff\s]+/g,'').replace(/^hxxp/i,'http').replace(/\[\.\]|\(\.\)/g,'.');if(!raw)return;const noScheme=!/^[a-z]+:\/\//i.test(raw);if(noScheme)raw='https://'+raw;
+ let u;try{u=new URL(raw)}catch(e){$('#ur').innerHTML='<div class="c">That does not look like a valid URL.</div>';return}
+ const h=u.hostname.toLowerCase(),reg=regDom(h),lab=reg.split('.')[0],tld=h.split('.').pop();
+ let s=0;const it=[];const add=(p,m)=>{s+=p;it.push([p>=25?'bad':p>0?'wn':'ok',m])};
+ const known=Object.values(BR).includes(reg);
+ if(u.protocol!=='https:')add(15,'Connection is not HTTPS: credentials can be intercepted.');else it.push(['ok','Uses HTTPS (this alone does not prove the site is safe).']);
+ if(/^\d+\.\d+\.\d+\.\d+$/.test(h))add(30,'Host is a raw IP address.');
+ if(h.includes('xn--')||/[^\x00-\x7f]/.test(h))add(35,'Punycode or non-ASCII characters: possible homograph attack.');
+ if(raw.includes('@'))add(25,'Contains @, which can hide the real destination.');
+ if(h.split('.').length>4)add(15,'Unusually deep subdomain chain.');
+ if(u.port&&!['80','443'].includes(u.port))add(10,'Non-standard port '+u.port+'.');
+ if(BAD_TLD.includes(tld))add(18,'Top-level domain .'+tld+' is heavily abused by phishing campaigns.');
+ if((h.match(/-/g)||[]).length>=2)add(10,'Many hyphens in the hostname.');
+ if(ent(lab)>3.6&&lab.length>10)add(12,'Domain looks randomly generated (high entropy).');
+ if(SHORT.includes(h))add(15,'URL shortener hides the final destination.');
+ if(/[?&](url|redirect|next|goto|dest)=https?:/i.test(u.search))add(20,'Query contains an embedded redirect to another site.');
+ if(raw.length>100)add(8,'Very long URL.');
+ const kw=KW.filter(k=>(h+u.pathname).toLowerCase().includes(k));
+ if(kw.length)add(Math.min(24,kw.length*8),'Credential or urgency keywords: '+kw.join(', ')+'.');
+ if(!known){for(const b in BR){
+  const sub=h.slice(0,h.length-reg.length);
+  if(sub.includes(b)){add(30,'Brand name “'+b+'” used in a subdomain of an unrelated domain ('+esc(reg)+').');break}
+  const n=leet(lab);
+  if(lab!==b&&(n===b||lev(n,b)<=1&&b.length>4)){add(38,'Look-alike of “'+b+'” (typosquatting): '+esc(lab)+'.');break}
+  if(lab.includes(b)){add(25,'Domain embeds brand “'+b+'” but is not the official site ('+BR[b]+').');break}
+ }}else{s=Math.max(0,s-20);it.push(['ok','Registered domain matches a known official brand domain.'])}
+ if(noScheme)it.push(['ok','No scheme given, so https was assumed.']);
+ let dec='';try{dec=decodeURIComponent(u.pathname+u.search)}catch(e){add(8,'Malformed percent-encoding in the URL.')}
+ if(!['http:','https:'].includes(u.protocol))add(50,'Unusual scheme '+esc(u.protocol)+'.');
+ if(/\.(pdf|docx?|jpg|png)\.(exe|scr|js|bat|apk|zip)\b/i.test(dec))add(35,'Double file extension disguises an executable.');
+ else if(/\.(exe|scr|apk|bat|msi|jar)(\?|$)/i.test(u.pathname))add(25,'Link points straight to an executable or app download.');
+ if((raw.match(/%[0-9a-f]{2}/gi)||[]).length>6)add(10,'Heavy percent-encoding used to obscure the link.');
+ if(['weebly.com','blogspot.com','github.io','firebaseapp.com','web.app','netlify.app','pages.dev','vercel.app','000webhostapp.com','wixsite.com','glitch.me'].some(x=>h.endsWith(x)))add(15,'Hosted on a free site-builder platform, often abused for throwaway phishing pages.');
+ if(/\d/.test(lab)&&lab.match(/\d/g).length/lab.length>0.3)add(10,'Domain is mostly digits.');
+ const pk=Object.keys(BR).find(b=>dec.toLowerCase().includes(b)&&!reg.includes(b));
+ if(pk&&!known)add(15,'Brand “'+pk+'” appears in the path of an unrelated domain.');
+ const r=feed().find(x=>h===x.d||h.endsWith('.'+x.d));
+ if(r)add(45,'Reported '+r.n+' times by the community as '+r.c+'.');
+ s=Math.min(100,s);
+ show($('#ur'),s,s<25?'Likely safe':s<55?'Suspicious':'High risk',it);
+ const sd=h.slice(0,h.length-reg.length);
+ $('#ur').insertAdjacentHTML('beforeend','<div class="c"><b>How the link breaks down</b><div class="t" style="word-break:break-all;margin-top:6px">'+esc(u.protocol)+'//'+esc(sd)+'<b style="color:var(--tx);background:var(--bd);padding:0 3px;border-radius:4px">'+esc(reg)+'</b>'+esc(u.port?':'+u.port:'')+esc((u.pathname+u.search).slice(0,160))+'</div><div class="t" style="margin-top:6px">The highlighted part is who really owns the site. Anything before it is set by that owner and can say anything.</div></div>');
+ const adv=s>=55?['Do not enter passwords, OTPs or card details.','Do not open or install anything from it.','If you already typed credentials: change the password and turn on 2FA now. For banking or UPI, call your bank and report at cybercrime.gov.in or 1930 (India).','Report it in the Threat feed tab.']:s>=25?['Do not log in through this link. Type the official address yourself.','Verify the sender through an official channel.']:['No strong warning signs, but this check is heuristic. For banking and payments, still type the address or use a bookmark.'];
+ $('#ur').insertAdjacentHTML('beforeend','<div class="c"><b>What to do</b>'+adv.map(a=>'<div class="f"><span class="d" style="background:var(--ac)"></span><div>'+a+'</div></div>').join('')+'</div>');
+ hist(h,s);
+ if(s>=25)$('#ur').insertAdjacentHTML('beforeend','<a class="btn l" href="#feed" onclick="$(\'#ru\').value=\''+esc(h)+'\'">Report this site</a>');
+ const q=encodeURIComponent(h);$('#ur').insertAdjacentHTML('beforeend','<div class="c ext"><b>Check it elsewhere</b><br><a class="lk" target="_blank" rel="noopener noreferrer" href="https://crt.sh/?q='+q+'">Certificates (crt.sh)</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://www.ssllabs.com/ssltest/analyze.html?d='+q+'">SSL Labs test</a><a class="lk" target="_blank" rel="noopener noreferrer" href="https://transparencyreport.google.com/safe-browsing/search?url='+encodeURIComponent(u.href)+'">Google Safe Browsing</a></div>');
+}
+function certDemo(w){const d=n=>new Date(Date.now()+n*864e5).toISOString().slice(0,10);
+ $('#cf').value=d(w?-500:-30);$('#ct').value=d(w?-10:60);$('#cs').value=w?'SHA-1':'SHA-256';$('#ck').value=w?'RSA 1024':'ECDSA P-256';
+ $('#ci').value=w?'eMudhra Sub CA':'Example Trusted CA';$('#ca').value=w?'other-site.com':'bank.example.in, www.bank.example.in';$('#cx').checked=!!w;$('#cl').checked=!w;scanCert()}
+function scanCert(){
+ const host=$('#ch').value.trim().toLowerCase(),f=new Date($('#cf').value),t=new Date($('#ct').value),now=new Date();
+ const san=$('#ca').value.toLowerCase().split(',').map(x=>x.trim()).filter(Boolean),it=[];let s=0;
+ const add=(p,m)=>{s+=p;it.push([p>=25?'bad':p>0?'wn':'ok',m])};
+ if(isNaN(t))add(10,'Validity dates missing.');else{
+  if(t<now)add(40,'Certificate has expired.');else if((t-now)/864e5<14)add(10,'Expires within 14 days.');else it.push(['ok','Certificate is within its validity period.']);
+  if(!isNaN(f)&&(t-f)/864e5>398)add(15,'Validity exceeds 398 days, above the browser maximum.')}
+ const m=san.some(x=>x===host||(x.startsWith('*.')&&host.endsWith(x.slice(1))&&host.split('.').length===x.split('.').length));
+ m?it.push(['ok','Hostname matches a Subject Alt Name.']):add(40,'Hostname is not covered by any Subject Alt Name: identity mismatch.');
+ if(['SHA-1','MD5'].includes($('#cs').value))add(30,'Weak signature algorithm '+$('#cs').value+' is forgeable.');else it.push(['ok','Signature algorithm is acceptable.']);
+ const k=$('#ck').value;if(k==='RSA 1024')add(35,'RSA 1024-bit key is considered breakable. Weak key generation can let attackers recompute private keys.');else it.push(['ok','Key strength is acceptable ('+k+').']);
+ if($('#cx').checked)add(35,'Self-signed: no trusted CA vouches for this identity.');
+ $('#cl').checked?it.push(['ok','Logged in Certificate Transparency (SCT present).']):add(20,'No SCT: not logged in CT, so mis-issuance would be hard to detect.');
+ const w=$('#cw').value.toLowerCase().split(',').map(x=>x.trim()).filter(Boolean).find(x=>$('#ci').value.toLowerCase().includes(x));
+ if(w)add(15,'Issuer matches CA watchlist entry “'+esc(w)+'”: cross-check serial and key against CT logs and the CA’s incident notices.');
+ s=Math.min(100,s);show($('#cr'),s,s<25?'Trust OK':s<55?'Questionable':'Do not trust',it);
+}
+function scanHdr(){
+ const L=$('#hh').value.split('\n'),H={},ck=[];
+ L.forEach(l=>{const i=l.indexOf(':');if(i>0){const k=l.slice(0,i).trim().toLowerCase(),v=l.slice(i+1).trim();if(k==='set-cookie')ck.push(v);else H[k]=v}});
+ let s=0;const it=[];const add=(p,m)=>{s+=p;it.push([p>=15?'bad':p>0?'wn':'ok',m])};
+ const need=[['strict-transport-security',15,'HSTS missing: downgrade and SSL-strip risk.'],['content-security-policy',15,'No Content-Security-Policy: weaker XSS defence.'],['x-frame-options',10,'No X-Frame-Options or frame-ancestors: clickjacking risk.'],['x-content-type-options',8,'X-Content-Type-Options: nosniff missing.'],['referrer-policy',5,'No Referrer-Policy.'],['permissions-policy',4,'No Permissions-Policy.']];
+ need.forEach(([k,p,m])=>H[k]?it.push(['ok',k+' present.']):add(p,m));
+ const hs=H['strict-transport-security'];if(hs){const a=+(hs.match(/max-age=(\d+)/)||[])[1];if(a<15552000)add(8,'HSTS max-age is short ('+a+'s); use 6 months or more.')}
+ if(/\d+\.\d+/.test(H.server||''))add(10,'Server header discloses a version: '+esc(H.server)+'.');
+ if(H['x-powered-by'])add(8,'X-Powered-By reveals the stack: '+esc(H['x-powered-by'])+'.');
+ const old=((H.server||'')+(H['x-powered-by']||'')).match(/(Apache\/2\.[0-2]\.|PHP\/[3-5]\.|nginx\/1\.(?:[0-9]|1[0-4])\.|IIS\/[5-7])/);
+ if(old)add(15,'Likely outdated software ('+esc(old[0])+'): check for known CVEs.');
+ ck.forEach(c=>{const n=c.split('=')[0],miss=['Secure','HttpOnly','SameSite'].filter(a=>!new RegExp(a,'i').test(c));if(miss.length)add(8,'Cookie '+esc(n)+' lacks '+miss.join(', ')+'.')});
+ s=Math.min(100,s);show($('#hr'),s,s<25?'Well hardened':s<55?'Needs work':'Weak posture',it);
+}
+function report(){const d=$('#ru').value.trim().toLowerCase().replace(/^https?:\/\//,'').split('/')[0];if(!d)return;
+ const f=feed(),e=f.find(x=>x.d===d);e?e.n++:f.unshift({d,c:$('#rc').value,n:1});
+ try{localStorage.setItem('tl_feed',JSON.stringify(f))}catch(x){}
+ $('#ru').value='';draw(f)}
+function draw(f){f=f||feed();$('#fd').innerHTML='<b>Community threat feed</b>'+f.map(x=>'<div class="f"><div style="flex:1">'+esc(x.d)+'<span class="tag">'+esc(x.c)+'</span></div><div class="t">'+x.n+' reports</div></div>').join('')}
+function hist(h,s){let a=[];try{a=JSON.parse(localStorage.getItem('tl_hist'))||[]}catch(e){}a=[{h,s},...a.filter(x=>x.h!==h)].slice(0,6);try{localStorage.setItem('tl_hist',JSON.stringify(a))}catch(e){}rh(a)}
+function rh(a){if(!a){try{a=JSON.parse(localStorage.getItem('tl_hist'))||[]}catch(e){a=[]}}const e=$('#uh');if(!a.length){e.style.display='none';return}e.style.display='block';e.innerHTML='<b>Recent scans</b>'+a.map(x=>'<div class="f"><div style="flex:1;word-break:break-all">'+esc(x.h)+'</div><div class="t" style="color:'+(x.s<25?COL.ok:x.s<55?COL.wn:COL.bad)+'">'+x.s+'/100</div></div>').join('')}
+async function pasteClip(){try{$('#url').value=await navigator.clipboard.readText();scanUrl()}catch(e){$('#url').focus();$('#ur').innerHTML='<div class="c">Clipboard access was blocked. Long-press the box and paste manually.</div>'}}
+$('#url').addEventListener('paste',()=>setTimeout(scanUrl,60));
+$('#url').addEventListener('keydown',e=>{if(e.key==='Enter')scanUrl()});
+const SM=(()=>{const n=100000,s=new Uint8Array(n),p=[];for(let i=2;i<n;i++){if(!s[i]){p.push(BigInt(i));for(let j=i*i;j<n;j+=i)s[j]=1}}return p})();
+const OIDN={'1.2.840.113549.1.1.5':'sha1WithRSA','1.2.840.113549.1.1.4':'md5WithRSA','1.2.840.113549.1.1.11':'sha256WithRSA','1.2.840.113549.1.1.12':'sha384WithRSA','1.2.840.113549.1.1.13':'sha512WithRSA','1.2.840.113549.1.1.10':'RSASSA-PSS','1.2.840.10045.4.3.2':'ecdsa-sha256','1.2.840.10045.4.3.3':'ecdsa-sha384','1.3.101.112':'Ed25519','1.2.840.10045.3.1.7':'P-256','1.3.132.0.34':'P-384','1.3.132.0.35':'P-521'};
+const NM={'2.5.4.3':'CN','2.5.4.10':'O','2.5.4.6':'C'};
+function D(b,o){const tag=b[o];let l=b[o+1],p=o+2;if(l&128){const c=l&127;l=0;for(let i=0;i<c;i++)l=l*256+b[p++]}return{tag,s:p,e:p+l}}
+function K(b,n){const a=[];let o=n.s;while(o<n.e){const c=D(b,o);a.push(c);o=c.e}return a}
+function OID(b,n){const v=b.slice(n.s,n.e),r=[Math.floor(v[0]/40),v[0]%40];let x=0;for(let i=1;i<v.length;i++){x=x*128+(v[i]&127);if(!(v[i]&128)){r.push(x);x=0}}return r.join('.')}
+function BI(b,n){let h='';for(let i=n.s;i<n.e;i++)h+=b[i].toString(16).padStart(2,'0');return BigInt('0x'+(h||'0'))}
+function TX(b,n){return new TextDecoder().decode(b.slice(n.s,n.e))}
+function NAME(b,n){return K(b,n).map(st=>{const a=K(b,K(b,st)[0]);return(NM[OID(b,a[0])]||'')+'='+TX(b,a[1])}).filter(x=>x[0]!=='=').join(', ')}
+function TM(b,n){const t=TX(b,n);let y,r;if(n.tag===0x17){y=+t.slice(0,2);y+=y<50?2000:1900;r=t.slice(2)}else{y=+t.slice(0,4);r=t.slice(4)}return new Date(Date.UTC(y,+r.slice(0,2)-1,+r.slice(2,4),+r.slice(4,6),+r.slice(6,8),+r.slice(8,10)))}
+function SPKI(b,n){const[alg,bit]=K(b,n),ak=K(b,alg),o=OID(b,ak[0]);if(o==='1.2.840.113549.1.1.1'){const[N,E]=K(b,D(b,bit.s+1));return{t:'rsa',n:BI(b,N),e:BI(b,E)}}if(o==='1.2.840.10045.2.1')return{t:'ec',c:OIDN[OID(b,ak[1])]||OID(b,ak[1])};if(o==='1.3.101.112')return{t:'ec',c:'Ed25519'};return{t:'other',c:o}}
+function CERT(b){const k=K(b,K(b,D(b,0))[0]),i=k[0].tag===0xA0?1:0,so=OID(b,K(b,k[i+1])[0]),v=K(b,k[i+3]);const c={sig:OIDN[so]||so,issuer:NAME(b,k[i+2]),subject:NAME(b,k[i+4]),from:TM(b,v[0]),to:TM(b,v[1]),san:[],sct:false,key:SPKI(b,k[i+5])};const ex=k.find(x=>x.tag===0xA3);if(ex)K(b,K(b,ex)[0]).forEach(e=>{const p=K(b,e),o=OID(b,p[0]);if(o==='1.3.6.1.4.1.11129.2.4.2')c.sct=true;if(o==='2.5.29.17')K(b,D(b,p[p.length-1].s)).forEach(g=>{if(g.tag===0x82)c.san.push(TX(b,g))})});return c}
+function PARSE(t){const out=[];let m;const re=/-----BEGIN ([A-Z ]+)-----([\s\S]*?)-----END \1-----/g;
+ while((m=re.exec(t))){try{const b=Uint8Array.from(atob(m[2].replace(/\s+/g,'')),c=>c.charCodeAt(0)),L=m[1];
+  if(L==='CERTIFICATE'){const c=CERT(b);out.push({label:c.subject||'Certificate',cert:c,...c.key})}
+  else if(L==='PUBLIC KEY')out.push({label:'Public key',...SPKI(b,D(b,0))});
+  else if(L==='RSA PUBLIC KEY'){const[N,E]=K(b,D(b,0));out.push({label:'RSA public key',t:'rsa',n:BI(b,N),e:BI(b,E)})}
+  else out.push({label:L,t:'other',c:'unsupported block type'})}catch(e){out.push({label:'Unreadable block',t:'err'})}}
+ const rn=/^\s*(?:n|modulus)\s*[=:]\s*(?:0x)?([0-9a-f]+)\s*$/gim;while((m=rn.exec(t)))out.push({label:'Raw modulus #'+(out.length+1),t:'rsa',n:BigInt('0x'+m[1]),e:65537n});return out}
+function isqrt(n){if(n<2n)return n;let x=1n<<BigInt((n.toString(2).length+1)>>1);for(;;){const y=(x+n/x)>>1n;if(y>=x)return x;x=y}}
+function fermat(n){let a=isqrt(n);if(a*a<n)a++;const F=[[16n,[0,1,4,9]],[9n,[0,1,4,7]],[5n,[0,1,4]],[7n,[0,1,2,4]],[13n,[0,1,3,4,9,10,12]]];for(let i=0;i<20000;i++,a++){const b2=a*a-n;if(F.every(([m,r])=>r.includes(Number(b2%m)))){const b=isqrt(b2);if(b*b===b2&&a-b>1n)return a-b}}return 0n}
+const RP=[3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167];
+const RS=RP.map(p=>{const s=new Set([1]);let x=1;do{x=x*65537%p;s.add(x)}while(x!==1);return s});
+const roca=n=>RP.every((p,i)=>RS[i].has(Number(n%BigInt(p))));
+const gcd=(a,b)=>{while(b){[a,b]=[b,a%b]}return a};
+function mp(b,e,m){let r=1n;b%=m;while(e>0n){if(e&1n)r=r*b%m;b=b*b%m;e>>=1n}return r}
+function pr(n){if(n<2n)return false;for(const p of SM.slice(0,50)){if(n===p)return true;if(n%p===0n)return false}let d=n-1n,r=0;while(!(d&1n)){d>>=1n;r++}for(const a of[2n,3n,5n,7n,11n,13n,17n,19n]){let x=mp(a,d,n);if(x===1n||x===n-1n)continue;let c=false;for(let i=1;i<r;i++){x=x*x%n;if(x===n-1n){c=true;break}}if(!c)return false}return true}
+function np(n){if(!(n&1n))n++;while(!pr(n))n+=2n;return n}
+function gp(bits){const b=new Uint8Array(bits/8);crypto.getRandomValues(b);b[0]|=0xc0;b[b.length-1]|=1;return np(BigInt('0x'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('')))}
+async function scanKeys(){
+ const ks=PARSE($('#kt').value),R=$('#kr');R.innerHTML='';
+ if(!ks.length){R.innerHTML='<div class="c">No key or certificate found. Paste a PEM block or a line like n=&lt;hex&gt;.</div>';return}
+ for(const k of ks){const d=document.createElement('div');R.appendChild(d);let s=0;const it=[];const add=(p,m)=>{s+=p;it.push([p>=25?'bad':p>0?'wn':'ok',m])},inf=m=>it.push(['ok',m]);
+  if(k.t==='rsa'){const n=k.n,e=k.e,bits=n.toString(2).length;
+   const fp=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(n.toString(16))))].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,16);
+   inf('RSA '+bits+'-bit · exponent '+e+' · fingerprint '+fp+'…');
+   bits<1024?add(50,'Key is only '+bits+' bits: can be factored with modest resources.'):bits<2048?add(30,'Key is '+bits+' bits, below the 2048-bit minimum.'):inf('Key length is acceptable.');
+   if(!(n&1n))add(60,'Modulus is even: trivially factorable.');
+   e===65537n?inf('Public exponent 65537 is the standard choice.'):(e<3n||!(e&1n))?add(40,'Invalid or unsafe public exponent '+e+'.'):e<65537n?add(15,'Small exponent '+e+' weakens padding-related attacks; 65537 is recommended.'):inf('Exponent '+e+' is acceptable.');
+   const f=SM.find(p=>n%p===0n);f?add(60,'Modulus is divisible by the small prime '+f+': the key is factored.'):inf('No prime factor below 100,000.');
+   const fr=fermat(n);fr?add(60,'Fermat factorisation succeeded, so the two primes are too close together. Recovered factor starts '+fr.toString().slice(0,14)+'…'):inf('Primes are not close together (Fermat test, 20,000 steps).');
+   roca(n)?add(40,'Matches the ROCA fingerprint (weak Infineon RSALib generation). Indicative only: confirm with the official detector.'):inf('No ROCA fingerprint.');
+   const bs=n.toString(2),ones=(bs.split('1').length-1)/bs.length;
+   if(bits>=512&&Math.abs(ones-.5)>.1)add(15,'Bit pattern is skewed ('+Math.round(ones*100)+'% ones): possible low-entropy generation.');else if(/0{48,}|1{48,}/.test(bs))add(15,'Long run of identical bits in the modulus.');else inf('Bit distribution looks random.');
+  }else if(k.t==='ec'){['P-256','P-384','P-521','Ed25519'].includes(k.c)?inf('Elliptic-curve key on '+esc(k.c)+': strong, standard curve.'):add(25,'Curve '+esc(k.c)+' is not a standard strong curve.')}
+  else add(10,'Could not analyse this key: '+esc(k.c||'unreadable block')+'.');
+  if(k.cert){const c=k.cert,now=new Date();
+   inf('Subject: '+esc(c.subject)+' · Issuer: '+esc(c.issuer));
+   c.to<now?add(35,'Certificate expired on '+c.to.toISOString().slice(0,10)+'.'):inf('Valid until '+c.to.toISOString().slice(0,10)+'.');
+   if((c.to-c.from)/864e5>398)add(15,'Validity period exceeds 398 days.');
+   /sha1|md5/i.test(c.sig)?add(30,'Weak signature algorithm '+esc(c.sig)+'.'):inf('Signed with '+esc(c.sig)+'.');
+   c.sct?inf('Embedded Certificate Transparency SCTs present.'):add(10,'No embedded SCT (may be delivered via TLS or OCSP instead).');
+   c.san.length?inf('SAN: '+esc(c.san.slice(0,5).join(', '))):add(15,'No DNS Subject Alt Name.');
+   const w=$('#cw').value.toLowerCase().split(',').map(x=>x.trim()).filter(Boolean).find(x=>c.issuer.toLowerCase().includes(x));
+   if(w)add(15,'Issuer matches CA watchlist “'+esc(w)+'”: verify this key against CT logs and the CA’s incident notices.');}
+  s=Math.min(100,s);show(d,s,s<25?'Key looks sound':s<55?'Weak signs':'Broken or unsafe',it);
+  d.firstChild.insertAdjacentHTML('afterbegin','<div class="t">'+esc(k.label)+'</div>');}
+ const rs=ks.filter(k=>k.t==='rsa');
+ if(rs.length>1){const it=[];let bad=0,dup=0;
+  for(let i=0;i<rs.length;i++)for(let j=i+1;j<rs.length;j++){if(rs[i].n===rs[j].n){dup++;it.push(['wn','“'+esc(rs[i].label)+'” and “'+esc(rs[j].label)+'” use the identical key.'])}else{const g=gcd(rs[i].n,rs[j].n);if(g>1n){bad++;it.push(['bad','“'+esc(rs[i].label)+'” and “'+esc(rs[j].label)+'” share a prime factor. One gcd computation factors both keys.'])}}}
+  if(!it.length)it.push(['ok','No shared primes or duplicate keys across '+rs.length+' RSA keys.']);
+  const d=document.createElement('div');R.appendChild(d);show(d,bad?95:dup?30:0,bad?'Shared primes found':dup?'Duplicate keys':'Cross-key check clean',it);
+  d.firstChild.insertAdjacentHTML('afterbegin','<div class="t">Batch GCD across all pasted keys</div>');}
+}
+async function kDemo(w){const t=$('#kt');
+ if(w==='ok'){const kp=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);let bin='';new Uint8Array(await crypto.subtle.exportKey('spki',kp.publicKey)).forEach(x=>bin+=String.fromCharCode(x));t.value='-----BEGIN PUBLIC KEY-----\n'+btoa(bin).match(/.{1,64}/g).join('\n')+'\n-----END PUBLIC KEY-----'}
+ else if(w==='shared'){const p=gp(256),a=gp(256),b=gp(256);t.value='n='+(p*a).toString(16)+'\nn='+(p*b).toString(16)}
+ else{const p=gp(256);t.value='n='+(p*np(p+2n*BigInt(1+Math.floor(Math.random()*50)))).toString(16)}
+ scanKeys()}
+rh();draw();certDemo(1);
+[['scanUrl','#ur'],['scanCert','#cr'],['scanHdr','#hr'],['scanKeys','#kr']].forEach(([n,id])=>{const f=window[n];window[n]=async function(){await f.apply(this,arguments);const e=$(id);if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth',block:'start'})}});
+window.addEventListener('hashchange',()=>{go();window.scrollTo(0,0)});go();
+</script></body></html>
